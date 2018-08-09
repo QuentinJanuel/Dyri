@@ -8,9 +8,13 @@ const path = require("path");
 
 //Constants declarations
 const PORT = 80;
+const clientPath = path.join(__dirname, "..", "client");
+const gamePath = path.join(__dirname, "..", "..", "games");
 
 //Client side redirection
-app.use("/", express.static(path.join(__dirname, "..", "client")));
+
+app.use("/", express.static(clientPath));
+app.use("/games", express.static(gamePath));
 
 //Sockets
 io.on("connection", socket => {
@@ -18,10 +22,10 @@ io.on("connection", socket => {
 		switch(type){
 			case "screen":
 				//do something
-				console.log("new screen");
+				//console.log("new screen");
 				break;
 			case "controller":
-				console.log("new controller");
+				//console.log("new controller");
 				break;
 		}
 	});

@@ -1,1 +1,1 @@
-node server/diry.js
+node server/dyri.js
