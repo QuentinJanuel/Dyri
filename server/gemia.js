@@ -37,5 +37,5 @@ io.on("connection", socket => {
 });
 
 server.listen(PORT, () => {
-	console.log("Diry started on port \""+PORT+"\".");
+	console.log("GEMIA started on port \""+PORT+"\".");
 });

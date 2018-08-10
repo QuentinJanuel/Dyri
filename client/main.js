@@ -175,16 +175,24 @@ let Screen = {
 			}
 		});
 	},
-	drawImage(x, y, imageName, params){
+	drawImage(x, y, imageName, params = {}){
 		const img = this.images[imageName];
 		if(img.loaded){
 			const scale = this.getScale();
-			const xscale = params.xscale || 1;
-			const yscale = params.yscale || 1;
+			let xscale = 1, yscale = 1, angle = 0;
+			if(params.xscale != undefined)
+				xscale = params.xscale;
+			if(params.yscale != undefined)
+				yscale = params.yscale;
+			if(params.angle != undefined)
+				angle = params.angle;
 			const coords = this.getPoint(x-img.origin.x*xscale, y-img.origin.y*yscale);
-			const width = img.width*scale*xscale;
-			const height = img.height*scale*yscale;
-			this.ctx.drawImage(img.img, coords.x, coords.y, width, height);
+			this.ctx.save();
+			this.ctx.translate(coords.x, coords.y);
+			this.ctx.scale(xscale*scale, yscale*scale);
+			this.ctx.rotate(-angle);
+			this.ctx.drawImage(img.img, 0, 0);
+			this.ctx.restore();
 		}
 	},
 	setup(loop){
@@ -203,7 +211,7 @@ Screen.setup();
 
 
 //CODE PROPRE A UN JEU
-
+let ang = 0;
 let gameLoop = () => {
 	Screen.clearAll();
 	// Screen.setColor("#00F");
@@ -219,14 +227,18 @@ let gameLoop = () => {
 	// });
 	// Screen.setColor("#0FF");
 	// Screen.drawLine(0, 1, 3, 2);
+	ang += 0.01;
 	Screen.drawImage(Screen.dimensions.width/2, Screen.dimensions.height/2, "sprite", {
 		xscale: 1,
-		yscale: 1
+		yscale: 1,
+		angle: ang
 	});
+	Screen.drawImage(100, 100, "icon");
 }
 
 Screen.loadImages([
-	{name: "sprite", url: "sprite.png", origin: "center"}
+	{name: "sprite", url: "sprite.png", origin: "center"},
+	{name: "icon", url: "icon.png", origin: "center"}
 ], () => {
 	Screen.loop = gameLoop;
 });
