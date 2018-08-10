@@ -13,6 +13,12 @@ const PORT = 80;
 const clientPath = path.join(__dirname, "..", "client");
 const gamePath = path.join(__dirname, "..", "..", "games");
 
+//Fetch game folder
+const getGames = () => fs.readdirSync(gamePath).filter(name => {
+	let file = path.join(gamePath, name);
+	return fs.lstatSync(file).isDirectory();
+});
+
 //Client side redirection
 
 app.use("/", express.static(clientPath));
@@ -25,6 +31,7 @@ io.on("connection", socket => {
 			case "screen":
 				//do something
 				//console.log("new screen");
+				socket.emit("games", getGames());
 				break;
 			case "controller":
 				//console.log("new controller");
