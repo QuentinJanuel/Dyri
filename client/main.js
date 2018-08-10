@@ -1,3 +1,5 @@
+"use strict";
+
 const server = "http://localhost:80";
 let socket = io(server);
 socket.emit("connection", "screen");
@@ -139,28 +141,51 @@ let Screen = {
 		this.ctx.closePath();
 		this.ctx.stroke();
 	},
-	loadImages(images){
+	loadImages(images, onLoad){
 		images.forEach(image => {
-			const origin = image.origin || {x: 0, y: 0};
-			let obj = new Image;
-			obj.src = this.gamePath+image.url;
+			let img = new Image;
+			img.src = this.gamePath+image.url;
 			this.images[image.name] = {
-				img: obj,
-				width: obj.width,
-				height: obj.height,
-				origin: origin
+				img: img,
+				loaded: false
 			};
+			img.onload = () => {
+				this.images[image.name].width = img.width;
+				this.images[image.name].height = img.height;
+				let origin = {x: 0, y: 0};
+				if(image.origin != undefined){
+					if(image.origin == "center"){
+						origin = {
+							x: img.width/2,
+							y: img.height/2
+						};
+					}else if(image.origin.x != undefined && image.origin.y != undefined){
+						origin = image.origin;
+					}
+				}
+				this.images[image.name].origin = origin;
+				this.images[image.name].loaded = true;
+				let countLoaded = 0;
+				images.forEach(image2 => {
+					if(this.images[image2.name].loaded)
+						countLoaded++;
+				});
+				if(countLoaded == images.length)
+					onLoad();
+			}
 		});
 	},
 	drawImage(x, y, imageName, params){
 		const img = this.images[imageName];
-		const scale = this.getScale();
-		const xscale = params.xscale || 1;
-		const yscale = params.yscale || 1;
-		const coords = this.getPoint(x-img.origin.x*xscale, y-img.origin.y*yscale);
-		const width = img.width*scale*xscale;
-		const height = img.height*scale*yscale;
-		this.ctx.drawImage(img.img, coords.x, coords.y, width, height);
+		if(img.loaded){
+			const scale = this.getScale();
+			const xscale = params.xscale || 1;
+			const yscale = params.yscale || 1;
+			const coords = this.getPoint(x-img.origin.x*xscale, y-img.origin.y*yscale);
+			const width = img.width*scale*xscale;
+			const height = img.height*scale*yscale;
+			this.ctx.drawImage(img.img, coords.x, coords.y, width, height);
+		}
 	},
 	setup(loop){
 		$("body").append(this.canvas);
@@ -179,11 +204,7 @@ Screen.setup();
 
 //CODE PROPRE A UN JEU
 
-Screen.loadImages([
-	{name: "sprite", url: "sprite.png", origin: {x: 500, y: 500}}
-]);
-let ang = 0;
-Screen.loop = () => {
+let gameLoop = () => {
 	Screen.clearAll();
 	// Screen.setColor("#00F");
 	// Screen.drawRect(0, 0, 3, 1);
@@ -198,9 +219,14 @@ Screen.loop = () => {
 	// });
 	// Screen.setColor("#0FF");
 	// Screen.drawLine(0, 1, 3, 2);
-	ang += 0.03;
 	Screen.drawImage(Screen.dimensions.width/2, Screen.dimensions.height/2, "sprite", {
-		xscale: 1+0.5*Math.cos(ang),
-		yscale: 1+0.5*Math.sin(ang)
+		xscale: 1,
+		yscale: 1
 	});
 }
+
+Screen.loadImages([
+	{name: "sprite", url: "sprite.png", origin: "center"}
+], () => {
+	Screen.loop = gameLoop;
+});
