@@ -1,5 +1,6 @@
-let canvas = $("<canvas>")[0];
+"use strict";
 
+let canvas = $("<canvas>")[0];
 let Screen = {
 	canvas: canvas,
 	ctx: canvas.getContext("2d"),
@@ -188,7 +189,7 @@ let Screen = {
 			this.ctx.restore();
 		}
 	},
-	setup(loop){
+	setup(){
 		$("body").append(this.canvas);
 		this.autoresize();
 		window.onresize = () => {this.needResize = true;};
@@ -200,5 +201,3 @@ let Screen = {
 		}, 1000/this.fps);
 	}
 };
-
-export default Screen;

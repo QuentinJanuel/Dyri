@@ -1,12 +1,5 @@
 "use strict";
 
-import Screen from "./screen.js";
-import Controllers from "./controllers.js";
-
-const server = "http://localhost:80";
-let socket = io(server);
-socket.emit("connection", "screen");
-
 Screen.setup();
 
 const startGame = gameName => {
@@ -32,5 +25,5 @@ const startGame = gameName => {
 }
 
 socket.on("games", games => {
-	startGame(games[0]);
+	startGame(games[1]);
 });
