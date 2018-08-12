@@ -63,41 +63,43 @@ let Screen = {
 }
 let Controllers = [];
 
-/*
-socket.emit("vibrate", [0, 50, 50, 50]);
-*/
-
 // Sockets
 io.on("connection", socket => {
 	socket.on("controller", () => {
-		const isNew = !Controllers.map(controller => controller.socket.id).includes(socket.id);
+		const isNew = !Controllers
+		.filter(controller => controller != null)
+		.map(controller => controller.socket.id)
+		.includes(socket.id);
 		if(isNew){
-			console.log("new controller spotted");
 			const color = getColor();
 			socket.emit("color", color.substring(1));
 			const num = Controllers.length;
 			Controllers[num] = {
 				socket: socket,
 				color: color,
-				joystick: {
+				id: socket.id,
+				joysticks: {
 					left: {angle: 0, distance: 0},
 					right: {angle: 0, distance: 0}
 				},
-				home: false,
+				getJoyData(data, side){
+					data.angle *= -Math.PI/180;
+					data.distance = Number(data.distance);
+					this.joysticks[side] = data;
+				},
+				remove(){
+					removeColor(this.color);
+					Controllers[num] = null;
+				}
 			};
-			socket.on("lJoy", data => {
-				Controllers[num].joystick.left = data;
-			});
-			socket.on("rJoy", data => {
-				Controllers[num].joystick.right = data;
-			});
+			let controller = Controllers[num];
+			socket.on("lJoy", data => controller.getJoyData(data, "left"));
+			socket.on("rJoy", data => controller.getJoyData(data, "right"));
 			socket.on("home", () => {
-				Controllers[num].home = true;
+				if(Screen.exists)
+					Screen.socket.emit("home", socket.id);
 			});
-			socket.on("disconnect", () => {
-				removeColor(color);
-				Controllers.splice(num, 1);
-			});
+			socket.on("disconnect", () => controller.remove());
 		}
 	});
 	socket.on("screen", () => {
@@ -111,19 +113,25 @@ io.on("connection", socket => {
 			});
 			Screen.interval = setInterval(() => {
 				socket.emit("receiveControllers", Controllers.map(controller => {
-					let tinyController = {};
-					Object.keys(controller).forEach(key => {
-						if(key != "socket"){
-							tinyController[key] = controller[key];
-						}
-					});
-					return tinyController;
+					if(controller){
+						return {
+							color: controller.color,
+							joysticks: controller.joysticks,
+							home: controller.home,
+							id: controller.id
+						};
+					}else{
+						return null;
+					}
 				}));
 			}, 1000/FPS);
 			socket.on("vibrate", data => {
-				if(Controllers.length > data.num){
-					Controllers[data.num].socket.emit("vibrate", data.pattern);
-				}
+				Controllers.forEach(controller => {
+					if(controller){
+						if(controller.id == data.id)
+							controller.socket.emit("vibrate", data.pattern);
+					}
+				});
 			});
 			Screen.exists = true;
 			Screen.socket = socket;
@@ -134,3 +142,5 @@ io.on("connection", socket => {
 server.listen(PORT, () => {
 	console.log("GEMIA started on port \""+PORT+"\".");
 });
+
+//server.close();

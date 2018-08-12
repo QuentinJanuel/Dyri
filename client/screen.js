@@ -183,7 +183,7 @@ let Screen = {
 			const coords = this.getPoint(x, y);
 			this.ctx.save();
 			this.ctx.translate(coords.x, coords.y);
-			this.ctx.rotate(-angle/2);
+			this.ctx.rotate(-angle);
 			this.ctx.scale(xscale*scale, yscale*scale);
 			this.ctx.drawImage(img.img, -img.origin.x, -img.origin.y);
 			this.ctx.restore();
