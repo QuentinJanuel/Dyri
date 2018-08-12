@@ -70,6 +70,7 @@ io.on("connection", socket => {
 		.filter(controller => controller != null)
 		.map(controller => controller.socket.id)
 		.includes(socket.id);
+		console.log(socket.id);
 		if(isNew){
 			const color = getColor();
 			socket.emit("color", color.substring(1));
@@ -95,9 +96,11 @@ io.on("connection", socket => {
 			let controller = Controllers[num];
 			socket.on("lJoy", data => controller.getJoyData(data, "left"));
 			socket.on("rJoy", data => controller.getJoyData(data, "right"));
-			socket.on("home", () => {
-				if(Screen.exists)
-					Screen.socket.emit("home", socket.id);
+			["home", "square", "circle"].forEach(button => {
+				socket.on(button, () => {
+					if(Screen.exists)
+						Screen.socket.emit(button, socket.id);
+				});
 			});
 			socket.on("disconnect", () => controller.remove());
 		}

@@ -52,10 +52,12 @@ let Controllers = {
 		return this.getList()[0];
 	}
 };
-socket.on("home", id => {
-	Controllers.eventsPressed.forEach(event => {
-		if(event.button == "home")
-			event.callback(Controllers.getById(id));
+["home", "square", "circle"].forEach(button => {
+	socket.on(button, id => {
+		Controllers.eventsPressed.forEach(event => {
+			if(event.button == button)
+				event.callback(Controllers.getById(id));
+		});
 	});
 });
 socket.on("receiveControllers", controllers => {
