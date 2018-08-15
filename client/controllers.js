@@ -1,16 +1,18 @@
 "use strict";
 
-const server = "http://127.0.0.1:80";
-let socket = io(server);
+var server = "http://127.0.0.1:80";
+var socket = io(server);
 socket.emit("screen");
 
-let Controllers = {
+var Controllers = {
 	controllers: [],
 	eventsPressed: [],
-	getNumber(){
-		return this.controllers.filter(controller => controller != null).length;
+	getNumber: function(){
+		return this.controllers.filter(function(controller){
+			return controller != null;
+		}).length;
 	},
-	getById(id){
+	getById: function(id){
 		for(let i = 0; i < this.controllers.length; ++i){
 			if(this.controllers[i]){
 				if(this.controllers[i].id == id)
@@ -19,12 +21,12 @@ let Controllers = {
 		}
 		return null;
 	},
-	getByNum(num){
+	getByNum: function(num){
 		let controller = {};
-		Object.keys(this.controllers[num]).forEach(key => {
+		Object.keys(this.controllers[num]).forEach(function(key){
 			controller[key] = this.controllers[num][key];
-		});
-		controller.vibrate = pattern => {
+		}.bind(this));
+		controller.vibrate = function(pattern){
 			if(typeof(pattern) == "number")
 				pattern = [pattern];
 			socket.emit("vibrate", {
@@ -32,41 +34,46 @@ let Controllers = {
 				pattern: [0, ...pattern]
 			});
 		}
-		controller.exists = () => Boolean(this.getById(controller.id));
+		controller.exists = function(){
+			return Boolean(this.getById(controller.id));
+		}
 		return controller;
 	},
-	getList(){
+	getList: function(){
 		return this.controllers
-		.filter(controller => controller != null)
-		.map(controller => this.getById(controller.id));
+		.filter(function(controller){
+			return controller != null;
+		}).map(function(controller){
+			return this.getById(controller.id);
+		}.bind(this));
 	},
-	onJoin(){},
-	onQuit(){},
-	onPressed(buttons, callback){
-		buttons.split(" ").forEach(button => {
+	onJoin: function(){},
+	onQuit: function(){},
+	onPressed: function(buttons, callback){
+		buttons.split(" ").forEach(function(button){
 			this.eventsPressed.push({
 				button: button,
 				callback: callback
 			});
-		});
+		}.bind(this));
 	},
-	getMain(){
+	getMain: function(){
 		return this.getList()[0];
 	}
 };
-["home", "square", "circle"].forEach(button => {
-	socket.on(button, id => {
-		Controllers.eventsPressed.forEach(event => {
+["home", "square", "circle"].forEach(function(button){
+	socket.on(button, function(id){
+		Controllers.eventsPressed.forEach(function(event){
 			if(event.button == button)
 				event.callback(Controllers.getById(id));
 		});
 	});
 });
-socket.on("receiveControllers", controllers => {
-	const oldLength = Controllers.getNumber();
+socket.on("receiveControllers", function(controllers){
+	var oldLength = Controllers.getNumber();
 	Controllers.controllers = controllers;
-	const newLength = Controllers.getNumber();
-	const diff = newLength-oldLength;
+	var newLength = Controllers.getNumber();
+	var diff = newLength-oldLength;
 	for(let i = 0; i < diff; ++i){
 		Controllers.onJoin();
 	}
