@@ -168,7 +168,7 @@ let Screen = {
 	drawImage(x, y, imageName, params = {}){
 		const img = this.images[imageName];
 		if(!img){
-			console.error("Trying to draw unexisting image \""+imageName+"\"");
+			console.error("Trying to draw an unexisting image \""+imageName+"\"");
 			return;
 		}
 		if(img.loaded){
@@ -201,3 +201,4 @@ let Screen = {
 		}, 1000/this.fps);
 	}
 };
+

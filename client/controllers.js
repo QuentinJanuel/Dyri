@@ -1,6 +1,6 @@
 "use strict";
 
-const server = "http://localhost:80";
+const server = "http://127.0.0.1:80";
 let socket = io(server);
 socket.emit("screen");
 
@@ -42,10 +42,12 @@ let Controllers = {
 	},
 	onJoin(){},
 	onQuit(){},
-	onPressed(button, callback){
-		this.eventsPressed.push({
-			button: button,
-			callback: callback
+	onPressed(buttons, callback){
+		buttons.split(" ").forEach(button => {
+			this.eventsPressed.push({
+				button: button,
+				callback: callback
+			});
 		});
 	},
 	getMain(){

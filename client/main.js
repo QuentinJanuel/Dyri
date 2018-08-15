@@ -16,10 +16,17 @@ const startGame = gameName => {
 		, () => {
 			Screen.dimensions = json.dimensions;
 			Screen.needResize = true;
-			document.body.appendChild($("<script>").attr({
-				src: gamePath+"main.js",
-				type: "module"
-			})[0]);
+			Sound.load(
+				json.sounds.map(sound => {
+					sound.url = gamePath+sound.url;
+					return sound;
+				})
+			, () => {
+				document.body.appendChild($("<script>").attr({
+					src: gamePath+"main.js",
+					type: "module"
+				})[0]);
+			});
 		});
 	});
 }

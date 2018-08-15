@@ -1,6 +1,6 @@
 "use strict";
 
-//Imports
+// Imports
 const express = require("express");
 const app = express();
 const server = require("http").createServer(app);
@@ -8,7 +8,7 @@ const io = require("socket.io")(server);
 const fs = require("fs");
 const path = require("path");
 
-//Constants declarations
+// Constants declarations
 const PORT = 80;
 const FPS = 60;
 const clientPath = path.join(__dirname, "..", "client");
@@ -27,13 +27,19 @@ const getGames = () => fs.readdirSync(gamePath).filter(name => {
 	return fs.lstatSync(file).isDirectory();
 });
 
-//Client side redirection
+// Access Control Allow Origin
+app.all("/", function(req, res, next) {
+	res.header("Access-Control-Allow-Origin", "*");
+	res.header("Access-Control-Allow-Headers", "X-Requested-With");
+	next();
+});
+// Client side redirection
 app.use("/", express.static(clientPath));
 app.use("/games", express.static(gamePath));
 
 // Prototypes
 Array.prototype.chooseOne = function(){
-  return this[Math.floor(Math.random()*this.length)];
+	return this[Math.floor(Math.random()*this.length)];
 }
 
 //Colors
@@ -55,7 +61,7 @@ const removeColor = color => {
 	}
 }
 
-//Screen and Controllers
+// Screen and controllers
 let Screen = {
 	socket: null,
 	interval: null,
@@ -78,7 +84,6 @@ io.on("connection", socket => {
 			Controllers[num] = {
 				socket: socket,
 				color: color,
-				id: socket.id,
 				joysticks: {
 					left: {angle: 0, distance: 0},
 					right: {angle: 0, distance: 0}
@@ -102,6 +107,7 @@ io.on("connection", socket => {
 						Screen.socket.emit(button, socket.id);
 				});
 			});
+			socket.emit("vibrate", [0, 500]);
 			socket.on("disconnect", () => controller.remove());
 		}
 	});
@@ -120,8 +126,7 @@ io.on("connection", socket => {
 						return {
 							color: controller.color,
 							joysticks: controller.joysticks,
-							home: controller.home,
-							id: controller.id
+							id: controller.socket.id
 						};
 					}else{
 						return null;
@@ -131,7 +136,7 @@ io.on("connection", socket => {
 			socket.on("vibrate", data => {
 				Controllers.forEach(controller => {
 					if(controller){
-						if(controller.id == data.id)
+						if(controller.socket.id == data.id)
 							controller.socket.emit("vibrate", data.pattern);
 					}
 				});
