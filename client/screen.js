@@ -1,9 +1,11 @@
 "use strict";
-
 var canvas = $("<canvas>")[0];
+var canvasColor = $("<canvas>")[0];
 var Screen = {
 	canvas: canvas,
 	ctx: canvas.getContext("2d"),
+	canvasColor: canvasColor,
+	ctxColor: canvasColor.getContext("2d"),
 	needResize: false,
 	images: {},
 	dimensions: {
@@ -12,6 +14,9 @@ var Screen = {
 	},
 	fps: 60,
 	loop: function(){},
+	setOpacity: function(alpha){
+		this.ctx.globalAlpha = alpha;
+	},
 	getOuterRect: function(){
 		var ratio = {
 			all: this.canvas.width/this.canvas.height,
@@ -172,6 +177,9 @@ var Screen = {
 		if(img.loaded){
 			var scale = this.getScale();
 			var xscale = 1, yscale = 1, angle = 0;
+			var colorize = false;
+			var color = "#FFF";
+			var value = 0;
 			if(!params)
 				params = {};
 			if(params.xscale != undefined)
@@ -180,12 +188,34 @@ var Screen = {
 				yscale = params.yscale;
 			if(params.angle != undefined)
 				angle = params.angle;
+			if(params.colorize){
+				if(params.colorize.color)
+					color = params.colorize.color;
+				if(params.colorize.value)
+					value = params.colorize.value;
+				colorize = true;
+			}
 			var coords = this.getPoint(x, y);
 			this.ctx.save();
 			this.ctx.translate(coords.x, coords.y);
 			this.ctx.rotate(-angle);
 			this.ctx.scale(xscale*scale, yscale*scale);
+			if(colorize){
+				this.canvasColor.width = img.img.width;
+				this.canvasColor.height = img.img.height;
+				this.ctxColor.clearRect(0, 0, img.img.width, img.img.height);
+				this.ctxColor.fillStyle = color;
+				this.ctxColor.fillRect(0, 0, img.img.width, img.img.height);
+				this.ctxColor.globalCompositeOperation = "destination-atop";
+				this.ctxColor.drawImage(img.img, 0, 0);
+			}
 			this.ctx.drawImage(img.img, -img.origin.x, -img.origin.y);
+			if(colorize){
+				var backupAlpha = this.ctx.globalAlpha;
+				this.ctx.globalAlpha *= value;
+				this.ctx.drawImage(this.canvasColor, -img.origin.x, -img.origin.y);
+				this.ctx.globalAlpha = backupAlpha;
+			}
 			this.ctx.restore();
 		}
 	},
@@ -199,7 +229,10 @@ var Screen = {
 			if(this.needResize)
 				this.autoresize();
 			this.loop();
+			var backupAlpha = this.ctx.globalAlpha;
+			this.ctx.globalAlpha = 1;
 			this.drawBlackBars();
+			this.ctx.globalAlpha = backupAlpha;
 		}.bind(this), 1000/this.fps);
 	}
 };

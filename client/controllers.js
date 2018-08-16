@@ -1,6 +1,9 @@
 "use strict";
 
-var server = "http://127.0.0.1:80";
+var IP = "127.0.0.1";
+var PORT = 80;
+
+var server = "http://"+IP+":"+PORT;
 var socket = io(server);
 socket.emit("screen");
 
@@ -37,6 +40,31 @@ var Controllers = {
 		controller.exists = function(){
 			return Boolean(this.getById(controller.id));
 		}
+		Object.keys(controller.joysticks).forEach(function(side){
+			var joystick = controller.joysticks[side];
+			var angle = joystick.angle%(2*Math.PI);
+			while(angle < 0){
+				angle += 2*Math.PI;
+			}
+			var directions = {
+				up: false,
+				down: false,
+				left: false,
+				right: false
+			};
+			if(joystick.distance > 0.5){
+				var tol = Math.PI/8;
+				if(angle < tol || angle > Math.PI*2-tol)
+					directions.right = true;
+				if(angle > Math.PI/2-tol && angle < Math.PI/2+tol)
+					directions.up = true;
+				if(angle > Math.PI-tol && angle < Math.PI+tol)
+					directions.left = true;
+				if(angle > Math.PI*3/2-tol && angle < Math.PI*3/2+tol)
+					directions.down = true;
+			}
+			controller.joysticks[side].directions = directions;
+		});
 		return controller;
 	},
 	getList: function(){
