@@ -53,7 +53,7 @@ var Controllers = {
 				right: false
 			};
 			if(joystick.distance > 0.5){
-				var tol = Math.PI/8;
+				var tol = Math.PI/4;
 				if(angle < tol || angle > Math.PI*2-tol)
 					directions.right = true;
 				if(angle > Math.PI/2-tol && angle < Math.PI/2+tol)
